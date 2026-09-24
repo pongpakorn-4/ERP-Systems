@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 
 function Badge({ children }: { children: React.ReactNode }) {
   return (
-    <span className="ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-sidebar-active px-1.5 text-[11px] font-semibold leading-none text-sidebar-active-foreground">
+    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-sidebar-active px-1.5 text-[11px] font-semibold leading-none text-sidebar-active-foreground">
       {children}
     </span>
   )
@@ -43,6 +43,8 @@ function SidebarLink({
     onSelect(item.href)
   }
 
+  const highlighted = isActive || (childActive && collapsed)
+
   return (
     <li>
       <button
@@ -51,22 +53,27 @@ function SidebarLink({
         title={collapsed ? item.label : undefined}
         aria-expanded={hasChildren ? open : undefined}
         className={cn(
-          "group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium outline-none transition-all duration-200",
+          "group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium outline-none transition-all duration-200",
           "focus-visible:ring-2 focus-visible:ring-sidebar-active/60",
-          isActive || (childActive && collapsed)
-            ? "bg-sidebar-active text-sidebar-active-foreground shadow-sm shadow-black/20"
+          highlighted
+            ? "bg-sidebar-active text-sidebar-active-foreground shadow-sm shadow-black/25"
             : "text-sidebar-foreground hover:bg-sidebar-hover hover:text-white",
           collapsed && "justify-center px-0",
         )}
       >
-        {/* active accent bar */}
+        {/* active accent bar (collapsed rail) */}
         <span
           className={cn(
-            "absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-sidebar-active transition-all duration-200",
-            isActive && collapsed ? "opacity-100" : "opacity-0",
+            "absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-sidebar-active transition-opacity duration-200",
+            highlighted && collapsed ? "opacity-100" : "opacity-0",
           )}
         />
-        <Icon className="size-5 shrink-0" />
+        <Icon
+          className={cn(
+            "size-5 shrink-0 transition-transform duration-200",
+            !highlighted && "group-hover:scale-110",
+          )}
+        />
         <span
           className={cn(
             "overflow-hidden whitespace-nowrap transition-all duration-300",
@@ -76,20 +83,21 @@ function SidebarLink({
           {item.label}
         </span>
 
-        {!collapsed && item.badge && !hasChildren && <Badge>{item.badge}</Badge>}
-        {!collapsed && item.badge && hasChildren && (
-          <span className="ml-auto flex items-center gap-1.5">
+        {!collapsed && item.badge && !hasChildren && (
+          <span className="ml-auto">
             <Badge>{item.badge}</Badge>
           </span>
         )}
         {!collapsed && hasChildren && (
-          <ChevronDown
-            className={cn(
-              "size-4 shrink-0 text-sidebar-muted transition-transform duration-300",
-              item.badge ? "" : "ml-auto",
-              open && "rotate-180",
-            )}
-          />
+          <span className="ml-auto flex items-center gap-1.5">
+            {item.badge && <Badge>{item.badge}</Badge>}
+            <ChevronDown
+              className={cn(
+                "size-4 shrink-0 opacity-60 transition-transform duration-300",
+                open && "rotate-180",
+              )}
+            />
+          </span>
         )}
       </button>
 
@@ -112,7 +120,7 @@ function SidebarLink({
                       type="button"
                       onClick={() => onSelect(child.href)}
                       className={cn(
-                        "flex w-full items-center gap-2 rounded-md px-3 py-2 text-[13px] transition-colors",
+                        "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-[13px] transition-colors",
                         active2
                           ? "bg-sidebar-hover font-medium text-white"
                           : "text-sidebar-muted hover:bg-sidebar-hover/60 hover:text-white",
@@ -125,7 +133,11 @@ function SidebarLink({
                         )}
                       />
                       <span className="truncate">{child.label}</span>
-                      {child.badge && <Badge>{child.badge}</Badge>}
+                      {child.badge && (
+                        <span className="ml-auto">
+                          <Badge>{child.badge}</Badge>
+                        </span>
+                      )}
                     </button>
                   )
                 })}
@@ -150,15 +162,18 @@ export function SidebarNav({
   return (
     <nav className="scroll-area flex-1 overflow-y-auto px-3 py-4">
       {navSections.map((section) => (
-        <div key={section.title} className="mb-5 last:mb-0">
+        <div key={section.title} className="mb-6 last:mb-0">
           <p
             className={cn(
-              "mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-sidebar-muted transition-all duration-300",
+              "mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-sidebar-muted transition-all duration-300",
               collapsed ? "h-0 overflow-hidden opacity-0" : "opacity-100",
             )}
           >
             {section.title}
           </p>
+          {collapsed && (
+            <div className="mx-auto mb-2 h-px w-8 bg-sidebar-border" />
+          )}
           <ul className="space-y-1">
             {section.items.map((item) => (
               <SidebarLink
